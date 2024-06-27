@@ -1,0 +1,44 @@
+server:
+  servlet:
+    encoding:
+      charset: utf-8
+      force: true
+    # url rewrite ?? ??
+    session:
+      tracking-modes: cookie
+  port: 7000
+
+spring:
+  # .env import
+  config:
+    import: optional:file:.env[.properties]
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:test;MODE=MySQL
+    username: sa
+    password:
+  h2:
+    console:
+      enabled: true
+
+  jpa:
+    hibernate:
+      ddl-auto: create
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        default_batch_fetch_size: 10
+    defer-datasource-initialization: true
+    open-in-view: true
+  servlet:
+    multipart:
+      max-file-size: 2000MB
+      max-request-size: 2000MB
+
+aws:
+  credentials:
+    accessKey: ${AWS_ACCESS_KEY}
+    secretKey: ${AWS_SECRET_KEY}
+  region: ${REGION}
+  bucket: ${BUCKET_NAME}
