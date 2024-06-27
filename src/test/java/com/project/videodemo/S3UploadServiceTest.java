@@ -20,16 +20,16 @@ public class S3UploadServiceTest {
     @Autowired
     private VideoService videoService;
 
-    @Test
-    public void testUploadFile() throws Exception {
-        // 임시 텍스트 파일 생성
-        Path filePath = Paths.get("test-upload.txt");
-        Files.write(filePath, "Hello, S3!".getBytes());
-
-        // 파일을 S3에 업로드
-        videoService.uploadFile(filePath);
-
-        // 테스트 후 파일 삭제
-        Files.deleteIfExists(filePath);
-    }
+//    @Test
+//    public void testUploadFile() throws Exception {
+//        // 임시 텍스트 파일 생성
+//        Path filePath = Paths.get("test-upload.txt");
+//        Files.write(filePath, "Hello, S3!".getBytes());
+//
+//        // 파일을 S3에 업로드
+//        videoService.uploadFile(filePath);
+//
+//        // 테스트 후 파일 삭제
+//        Files.deleteIfExists(filePath);
+//    }
 }

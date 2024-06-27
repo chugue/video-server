@@ -84,32 +84,25 @@ public class VideoController {
         }
 
         try {
-            // 파일이름을 확장자로부터 분리, 없다면 output 이름으로 지정
-            String originalFileName = file.getOriginalFilename();
-            String baseFileName = originalFileName != null ? originalFileName.substring(0, originalFileName.lastIndexOf('.')) : "output";
-            String sanitizedBaseFileName = baseFileName.toLowerCase().replaceAll("\\s+", "_");
+            // 파일을 로컬에 저장
+            Path targetLocation = videoService.saveFileToLocal(file);
 
-            // 파일 명에 따라 디렉토리 생성
-            Path videoLocation = Paths.get(UPLOAD_DIR).toAbsolutePath().normalize();
-            Path directoryPath = videoLocation.resolve(sanitizedBaseFileName);
-
-            if (!Files.exists(directoryPath)) {
-                Files.createDirectories(directoryPath);
-            }
-
-            // 파일을 서버에 저장
-            Path targetLocation = directoryPath.resolve(sanitizedBaseFileName + ".mp4");
-            Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
-
-            // FFmpeg 명령어 준비 - 진짜 피일이름과, 어떤 이름으로 변환할 것인지에 대해서 명시해야된다.
-
+            // FFmpeg 명령어 준비 - 진짜 파일 이름과, 어떤 이름으로 변환할 것인지에 대해서 명시해야 된다.
+            String fileName = targetLocation.getFileName().toString();
+            String sanitizedBaseFileName = fileName.substring(0, fileName.lastIndexOf('.'));
+            Path directoryPath = targetLocation.getParent();
             videoService.encode(targetLocation.toString(), sanitizedBaseFileName, directoryPath);
 
+
+            // 인코딩된 파일들을 S3에 업로드
+            videoService.uploadToS3(directoryPath, sanitizedBaseFileName);
 
             // mpd파일에서 m4s호출 경로 수정 CORS 걸림
             Path mpdFilePath = directoryPath.resolve(sanitizedBaseFileName + ".mpd");
             RespDTO respDTO = new RespDTO(mpdFilePath);
 
+            // 로컬 파일 및 디렉토리 삭제
+            videoService.deleteLocalFiles(directoryPath);
 
             return ResponseEntity.ok(new ApiUtil<>(respDTO));
 
