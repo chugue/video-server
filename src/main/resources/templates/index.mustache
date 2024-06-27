@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Video Upload and Playback</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/3.2.1/shaka-player.compiled.js"></script>
+    <style>
+        #qualityLevels {
+            margin-top: 20px;
+        }
+
+        #qualityLevels button {
+            margin-right: 10px;
+            padding: 10px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Upload Video</h1>
+
+<input type="file" id="file" name="file" required>
+<button type="button" id="uploadButton">Upload</button>
+
+
+<h1>DASH Video Player</h1>
+<video id="videoPlayer" width="640" height="360" controls autoplay muted></video>
+<div id="qualityLevels"></div> <!-- 화질 선택 버튼을 표시할 영역 -->
+<button type="button" id="playButton">Play Uploaded Video</button>
+
+<script>
+    document.addEventListener('DOMContentLoaded', initApp);
+
+    function initApp() {
+        // Install built-in polyfills to patch browser incompatibilities.
+        shaka.polyfill.installAll();
+
+        // Check if the browser supports the basic APIs Shaka needs.
+        if (shaka.Player.isBrowserSupported()) {
+            // Everything looks good!
+            initPlayer();
+        } else {
+            // This browser does not have the minimum set of APIs we need.
+            console.error('Browser not supported!');
+        }
+    }
+
+    function initPlayer() {
+        // Create a Player instance.
+        const video = document.getElementById('videoPlayer');
+        const player = new shaka.Player(video);
+
+        // Attach player to the window to make it easy to access in the JS console.
+        window.player = player;
+
+        // Listen for error events.
+        player.addEventListener('error', onErrorEvent);
+    }
+
+    function loadVideo(videoUrl) {
+        const player = window.player;
+
+        // Try to load a manifest.
+        // This is an asynchronous process.
+        try {
+            player.load(videoUrl).then(function() {
+                // This runs if the asynchronous load is successful.
+                console.log('The video has now been loaded!');
+            }).catch(onError);  // onError is executed if the asynchronous load fails.
+        } catch (e) {
+            onError(e);
+        }
+    }
+
+    function onErrorEvent(event) {
+        // Extract the shaka.util.Error object from the event.
+        onError(event.detail);
+    }
+
+    function onError(error) {
+        // Log the error.
+        console.error('Error code', error.code, 'object', error);
+        if (error.code === 7002) {
+            console.error('Manifest loading error. Please check the manifest URL and CORS settings.');
+        }
+    }
+
+    $(document).ready(function () {
+        let uploadedFilePath = '';
+
+        $('#uploadButton').on('click', function (event) {
+            event.preventDefault();
+            var formData = new FormData();
+            formData.append('file', $('#file')[0].files[0]);
+
+            $.ajax({
+                url: '/upload',
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    alert('업로드가 완료되었습니다.');
+
+                },
+                error: function (xhr, status, error) {
+                    alert('업로드에 실패하였습니다.: ' + error);
+                }
+            });
+        });
+
+        $('#playButton').on('click', function () {
+            uploadedFilePath = '/videos?filename=' + "maze_runner.mpd";
+            if (uploadedFilePath) {
+                loadVideo(uploadedFilePath);
+            } else {
+                alert('먼저 동영상을 업로드해주세요.');
+            }
+        });
+    });
+</script>
+</body>
+</html>
