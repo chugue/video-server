@@ -39,13 +39,13 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .allowedHeaders("*")
                 .allowCredentials(true);
 
-        registry.addMapping("/videos/**")
+        registry.addMapping("/videos")
                 .allowedOrigins("http://localhost:7000", "http://localhost:8080")
                 .allowedMethods("*")
                 .allowedHeaders("*")
                 .allowCredentials(true);
 
-        registry.addMapping("/**")
+        registry.addMapping("/videolocation/**")
                 .allowedOrigins("http://localhost:7000", "http://localhost:8080")
                 .allowedMethods("*")
                 .allowedHeaders("*")

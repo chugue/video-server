@@ -76,7 +76,7 @@ public class VideoController {
         }
     }
 
-    @CrossOrigin(origins = "http://localhost:8080")
+
     @PostMapping("/upload")
     public ResponseEntity<?> singleFileUpload(@RequestParam("file") MultipartFile file) {
         if (file.isEmpty()) {
@@ -108,7 +108,7 @@ public class VideoController {
 
             // mpd파일에서 m4s호출 경로 수정 CORS 걸림
             Path mpdFilePath = directoryPath.resolve(sanitizedBaseFileName + ".mpd");
-            VideoResponse.RespDTO respDTO = new VideoResponse.RespDTO(mpdFilePath);
+            RespDTO respDTO = new RespDTO(mpdFilePath);
 
 
             return ResponseEntity.ok(new ApiUtil<>(respDTO));
@@ -121,5 +121,13 @@ public class VideoController {
     }
 
 
+    @Data
+    public class RespDTO {
+        private String filePath;
+
+        public RespDTO(Path mpdFilePath) {
+            this.filePath = mpdFilePath.toString();
+        }
+    }
 }
 

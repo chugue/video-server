@@ -9,6 +9,9 @@ server:
   port: 7000
 
 spring:
+  # .env import
+  config:
+    import: optional:file:.env[.properties]
   datasource:
     driver-class-name: org.h2.Driver
     url: jdbc:h2:mem:test;MODE=MySQL
@@ -33,3 +36,9 @@ spring:
       max-file-size: 2000MB
       max-request-size: 2000MB
 
+aws:
+  credentials:
+    accessKey: ${AWS_ACCESS_KEY}
+    secretKey: ${AWS_SECRET_KEY}
+  region: ${REGION}
+  bucket: ${BUCKET_NAME}
