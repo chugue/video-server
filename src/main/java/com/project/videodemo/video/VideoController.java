@@ -38,9 +38,6 @@ public class VideoController {
     private static final String UPLOAD_DIR = "videolocation/";
     private final Path videoLocation = Paths.get(UPLOAD_DIR).toAbsolutePath().normalize();
 
-    @Value("${CONTENT_KEY}")
-    private String contentKey;
-
 
     @PostMapping("/upload2")
     public ResponseEntity<?> singleFileUpload2(@RequestParam("file") MultipartFile file) {
@@ -48,36 +45,39 @@ public class VideoController {
             return new ResponseEntity<>("Please select a file!", HttpStatus.BAD_REQUEST);
         }
 
-        System.out.println("👉👉👉👉👉👉👉" + contentKey);
-//        try {
-//            // 파일을 로컬에 저장
-//            Path targetLocation = videoService.saveFileToLocal(file);
-//
-//            // FFmpeg 명령어 준비 - 진짜 파일 이름과, 어떤 이름으로 변환할 것인지에 대해서 명시해야 된다.
-//            String fileName = targetLocation.getFileName().toString();
-//            String sanitizedBaseFileName = fileName.substring(0, fileName.lastIndexOf('.'));
-//            Path directoryPath = targetLocation.getParent();
-//            videoService.encode(targetLocation.toString(), sanitizedBaseFileName, directoryPath);
-//
-//
+        try {
+            // 파일을 로컬에 저장
+            Path targetLocation = videoService.saveFileToLocal(file);
+
+            // 파일 이름 및 경로 설정
+            String fileName = targetLocation.getFileName().toString();
+            String baseFileName = fileName.substring(0, fileName.lastIndexOf('.'));
+            Path directoryPath = targetLocation.getParent();
+
+            // 인코딩
+            videoService.encodeMultipleResolutions(targetLocation.toString(), baseFileName, directoryPath);
+
+            // 암호화 및 패키징
+            videoService.encryptAndPackage(baseFileName, directoryPath);
+
+
 //            // 인코딩된 파일들을 S3에 업로드
-//            videoService.uploadToS3(directoryPath, sanitizedBaseFileName);
-//
-//            // mpd파일에서 m4s호출 경로 수정 CORS 걸림
-//            Path mpdFilePath = directoryPath.resolve(sanitizedBaseFileName + ".mpd");
-//            RespDTO respDTO = new RespDTO(mpdFilePath);
-//
+//            videoService.uploadToS3(directoryPath, baseFileName);
+
+            // mpd파일에서 m4s호출 경로 수정 CORS 걸림
+            Path mpdFilePath = directoryPath.resolve(baseFileName + ".mpd");
+            RespDTO respDTO = new RespDTO(mpdFilePath);
+
 //            // 로컬 파일 및 디렉토리 삭제
 //            videoService.deleteLocalFiles(directoryPath);
-//
-//            return ResponseEntity.ok(new ApiUtil<>(respDTO));
-//
-//        } catch (IOException e) {
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("File processing failed: " + e.getMessage());
-//        } catch (InterruptedException e) {
-//            throw new RuntimeException(e);
-//        }
-        return null;
+
+            return ResponseEntity.ok(new ApiUtil<>(respDTO));
+
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("File processing failed: " + e.getMessage());
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 
