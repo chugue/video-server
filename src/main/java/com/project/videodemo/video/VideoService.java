@@ -3,6 +3,7 @@ package com.project.videodemo.video;
 import com.project.videodemo._core.AwsProperties;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -15,6 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -27,6 +29,157 @@ public class VideoService {
     private final S3Client s3;
     private final AwsProperties awsProperties;
     private static final String UPLOAD_DIR = "videolocation/";
+
+    @Value("${CONTENT_KEY}")
+    private String contentKey;
+
+    @Value("${KEY_ID}")
+    private String keyId;
+
+    @Value("${SHAKA_PACKAGER_PATH}")
+    private String shakaPackagerPath;
+
+
+    // 암호화 메소드
+    @Transactional
+    public void encryptAndPackage(String baseFileName, Path directoryPath) throws IOException, InterruptedException {
+        String[] resolutions = {"480p", "720p", "1080p"};
+
+        List<String> command = new ArrayList<>();
+        command.add(shakaPackagerPath);
+
+        for (String resolution : resolutions) {
+            String mp4InputFile = directoryPath.resolve(baseFileName + "_" + resolution + ".mp4").toString();
+            String videoInitSegmentPath = directoryPath.resolve(baseFileName + "_init_" + resolution + ".m4s").toString();
+            String videoSegmentPath = directoryPath.resolve(baseFileName + "_chunk_" + resolution + "_$Number%05d$.m4s").toString();
+
+            command.add("in=" + mp4InputFile + ",stream=video,init_segment=" + videoInitSegmentPath + ",segment_template=" + videoSegmentPath);
+        }
+
+        String audioInitSegmentPath = directoryPath.resolve(baseFileName + "_init_audio.m4s").toString();
+        String audioSegmentPath = directoryPath.resolve(baseFileName + "_chunk_audio_$Number%05d$.m4s").toString();
+        String audioInputFile = directoryPath.resolve(baseFileName + "_audio.mp4").toString();
+
+        command.add("in=" + audioInputFile + ",stream=audio,init_segment=" + audioInitSegmentPath + ",segment_template=" + audioSegmentPath);
+
+        String encryptedOutputMpd = directoryPath.resolve(baseFileName + "_encrypted.mpd").toString();
+
+        command.add("--enable_raw_key_encryption");
+        command.add("--keys");
+        command.add("label=:key_id=" + keyId + ":key=" + contentKey);
+        command.add("--mpd_output");
+        command.add(encryptedOutputMpd);
+        command.add("--segment_duration");
+        command.add("4");
+
+        ProcessBuilder pb = new ProcessBuilder(command);
+        pb.directory(directoryPath.toFile());
+        pb.redirectErrorStream(true);
+        Process process = pb.start();
+
+        new Thread(() -> {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    System.out.println(line);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
+
+        int exitCode = process.waitFor();
+        if (exitCode != 0) {
+            throw new RuntimeException("shaka-packager command failed with exit code " + exitCode);
+        }
+
+        // 필요 없는 파일 삭제
+        for (String resolution : resolutions) {
+            Files.deleteIfExists(directoryPath.resolve(baseFileName + "_" + resolution + ".mp4"));
+            Files.deleteIfExists(directoryPath.resolve(baseFileName + ".mp4"));
+        }
+        Files.deleteIfExists(directoryPath.resolve(baseFileName + "_audio.mp4"));
+    }
+
+
+    @Transactional
+    public void encodeMultipleResolutions(String inputFilePath, String baseFileName, Path directoryPath) throws IOException, InterruptedException {
+        String[] resolutions = {"480p", "720p", "1080p"};
+        String[] bitrates = {"800k", "1500k", "3000k"};
+        String[] sizes = {"854x480", "1280x720", "1920x1080"};
+
+        for (int i = 0; i < resolutions.length; i++) {
+            String resolution = resolutions[i];
+            String bitrate = bitrates[i];
+            String size = sizes[i];
+
+            String outputFilePath = directoryPath.resolve(baseFileName + "_" + resolution + ".mp4").toString();
+
+            ProcessBuilder pb = new ProcessBuilder(
+                    "ffmpeg",
+                    "-i", inputFilePath,
+                    "-map", "0:v", "-map", "0:a",
+                    "-b:v", bitrate, "-s:v", size,
+                    "-c:v", "libx264",
+                    "-c:a", "aac",
+                    "-y", outputFilePath
+            );
+
+            pb.directory(directoryPath.toFile());
+            pb.redirectErrorStream(true);
+            Process process = pb.start();
+
+            new Thread(() -> {
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        System.out.println(line);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }).start();
+
+            int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                throw new RuntimeException("FFmpeg command failed with exit code " + exitCode);
+            }
+        }
+
+        // 오디오만 추출
+        String audioOutputFilePath = directoryPath.resolve(baseFileName + "_audio.mp4").toString();
+        ProcessBuilder audioPb = new ProcessBuilder(
+                "ffmpeg",
+                "-i", inputFilePath,
+                "-vn",
+                "-c:a", "aac",
+                "-y", audioOutputFilePath
+        );
+
+        audioPb.directory(directoryPath.toFile());
+        audioPb.redirectErrorStream(true);
+        Process audioProcess = audioPb.start();
+
+        new Thread(() -> {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(audioProcess.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    System.out.println(line);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
+
+        int audioExitCode = audioProcess.waitFor();
+        if (audioExitCode != 0) {
+            throw new RuntimeException("FFmpeg command failed with exit code " + audioExitCode);
+        }
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////////
+
 
 
     // 파일을 인코딩 하는 로직
@@ -44,7 +197,7 @@ public class VideoService {
                 "-map", "0:v", "-map", "0:a",             // 모든 비디오와 오디오 스트림을 맵핑
                 "-b:v:0", "3000k", "-s:v:0", "1920x1080", // 첫 번째 비디오 스트림: 3000kbps, 1920x1080 (Full HD)
                 "-b:v:1", "1500k", "-s:v:1", "1280x720",  // 두 번째 비디오 스트림: 1500kbps, 1280x720 (HD)
-                "-b:v:2", "800k", "-s:v:2", "854x480",   // 세 번째 비디오 스트림: 800kbps, 854x480 (SD)
+                "-b:v:2", "800k", "-s:v:2", "854x480",    // 세 번째 비디오 스트림: 800kbps, 854x480 (SD)
                 "-c:v", "libx264",                        // 비디오 코덱: libx264 (H.264)
                 "-c:a", "aac",                            // 오디오 코덱: AAC
                 "-f", "dash",                             // 출력 포맷: DASH

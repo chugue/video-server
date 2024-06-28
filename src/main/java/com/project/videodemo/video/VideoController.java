@@ -1,9 +1,13 @@
 package com.project.videodemo.video;
 
 
+import ch.qos.logback.classic.Logger;
 import com.project.videodemo._core.ApiUtil;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
@@ -11,16 +15,21 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 
 @RequiredArgsConstructor
 @Controller
@@ -28,6 +37,48 @@ public class VideoController {
     private final VideoService videoService;
     private static final String UPLOAD_DIR = "videolocation/";
     private final Path videoLocation = Paths.get(UPLOAD_DIR).toAbsolutePath().normalize();
+
+
+    @PostMapping("/upload2")
+    public ResponseEntity<?> singleFileUpload2(@RequestParam("file") MultipartFile file) {
+        if (file.isEmpty()) {
+            return new ResponseEntity<>("Please select a file!", HttpStatus.BAD_REQUEST);
+        }
+
+        try {
+            // 파일을 로컬에 저장
+            Path targetLocation = videoService.saveFileToLocal(file);
+
+            // 파일 이름 및 경로 설정
+            String fileName = targetLocation.getFileName().toString();
+            String baseFileName = fileName.substring(0, fileName.lastIndexOf('.'));
+            Path directoryPath = targetLocation.getParent();
+
+            // 인코딩
+            videoService.encodeMultipleResolutions(targetLocation.toString(), baseFileName, directoryPath);
+
+            // 암호화 및 패키징
+            videoService.encryptAndPackage(baseFileName, directoryPath);
+
+
+//            // 인코딩된 파일들을 S3에 업로드
+//            videoService.uploadToS3(directoryPath, baseFileName);
+
+            // mpd파일에서 m4s호출 경로 수정 CORS 걸림
+            Path mpdFilePath = directoryPath.resolve(baseFileName + ".mpd");
+            RespDTO respDTO = new RespDTO(mpdFilePath);
+
+//            // 로컬 파일 및 디렉토리 삭제
+//            videoService.deleteLocalFiles(directoryPath);
+
+            return ResponseEntity.ok(new ApiUtil<>(respDTO));
+
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("File processing failed: " + e.getMessage());
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
 
     @GetMapping("/")
