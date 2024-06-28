@@ -6,6 +6,7 @@ import com.project.videodemo._core.ApiUtil;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -36,6 +37,48 @@ public class VideoController {
     private final VideoService videoService;
     private static final String UPLOAD_DIR = "videolocation/";
     private final Path videoLocation = Paths.get(UPLOAD_DIR).toAbsolutePath().normalize();
+
+    @Value("${CONTENT_KEY}")
+    private String contentKey;
+
+
+    @PostMapping("/upload2")
+    public ResponseEntity<?> singleFileUpload2(@RequestParam("file") MultipartFile file) {
+        if (file.isEmpty()) {
+            return new ResponseEntity<>("Please select a file!", HttpStatus.BAD_REQUEST);
+        }
+
+        System.out.println("👉👉👉👉👉👉👉" + contentKey);
+//        try {
+//            // 파일을 로컬에 저장
+//            Path targetLocation = videoService.saveFileToLocal(file);
+//
+//            // FFmpeg 명령어 준비 - 진짜 파일 이름과, 어떤 이름으로 변환할 것인지에 대해서 명시해야 된다.
+//            String fileName = targetLocation.getFileName().toString();
+//            String sanitizedBaseFileName = fileName.substring(0, fileName.lastIndexOf('.'));
+//            Path directoryPath = targetLocation.getParent();
+//            videoService.encode(targetLocation.toString(), sanitizedBaseFileName, directoryPath);
+//
+//
+//            // 인코딩된 파일들을 S3에 업로드
+//            videoService.uploadToS3(directoryPath, sanitizedBaseFileName);
+//
+//            // mpd파일에서 m4s호출 경로 수정 CORS 걸림
+//            Path mpdFilePath = directoryPath.resolve(sanitizedBaseFileName + ".mpd");
+//            RespDTO respDTO = new RespDTO(mpdFilePath);
+//
+//            // 로컬 파일 및 디렉토리 삭제
+//            videoService.deleteLocalFiles(directoryPath);
+//
+//            return ResponseEntity.ok(new ApiUtil<>(respDTO));
+//
+//        } catch (IOException e) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("File processing failed: " + e.getMessage());
+//        } catch (InterruptedException e) {
+//            throw new RuntimeException(e);
+//        }
+        return null;
+    }
 
 
     @GetMapping("/")
