@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--Generated with https://github.com/shaka-project/shaka-packager version v3.2.0-53b8668-release-->
+<MPD xmlns="urn:mpeg:dash:schema:mpd:2011" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:mpeg:dash:schema:mpd:2011 DASH-MPD.xsd" xmlns:cenc="urn:mpeg:cenc:2013" profiles="urn:mpeg:dash:profile:isoff-live:2011" minBufferTime="PT2S" type="dynamic" publishTime="2024-06-30T10:53:01Z" availabilityStartTime="2024-06-30T10:53:00Z" minimumUpdatePeriod="PT5S" timeShiftBufferDepth="PT1800S">
+  <Period id="0" start="PT0S">
+    <AdaptationSet id="0" contentType="video" maxWidth="1920" maxHeight="1080" frameRate="1000/42" segmentAlignment="true" par="22:9">
+      <SupplementalProperty schemeIdUri="urn:mpeg:mpegB:cicp:TransferCharacteristics" value="1"/>
+      <ContentProtection value="cenc" schemeIdUri="urn:mpeg:dash:mp4protection:2011" cenc:default_KID="12345678-90ab-cdef-1234-567890abcdef"/>
+      <ContentProtection schemeIdUri="urn:uuid:1077efec-c0b2-4d02-ace3-3c1e52e2fb4b">
+        <cenc:pssh>AAAANHBzc2gBAAAAEHfv7MCyTQKs4zweUuL7SwAAAAESNFZ4kKvN7xI0VniQq83vAAAAAA==</cenc:pssh>
+      </ContentProtection>
+      <Representation id="0" bandwidth="1235435" codecs="avc1.64001e" mimeType="video/mp4" sar="3148:2287" width="854" height="480">
+        <SegmentTemplate timescale="1000" initialization="rush_hour_init_480p.m4s" media="rush_hour_chunk_480p_$Number%05d$.m4s" startNumber="1">
+          <SegmentTimeline>
+            <S t="0" d="5000"/>
+            <S t="5000" d="3958"/>
+            <S t="8958" d="4083"/>
+            <S t="13042" d="3750"/>
+            <S t="16792" d="4334"/>
+            <S t="21125" d="2916"/>
+            <S t="24042" d="4459"/>
+            <S t="28500" d="1500"/>
+          </SegmentTimeline>
+        </SegmentTemplate>
+      </Representation>
+      <Representation id="1" bandwidth="2259634" codecs="avc1.64001f" mimeType="video/mp4" sar="135:98" width="1280" height="720">
+        <SegmentTemplate timescale="1000" initialization="rush_hour_init_720p.m4s" media="rush_hour_chunk_720p_$Number%05d$.m4s" startNumber="1">
+          <SegmentTimeline>
+            <S t="0" d="5000"/>
+            <S t="5000" d="3958"/>
+            <S t="8958" d="4083"/>
+            <S t="13042" d="3750"/>
+            <S t="16792" d="4334"/>
+            <S t="21125" d="2916"/>
+            <S t="24042" d="4459"/>
+            <S t="28500" d="1500"/>
+          </SegmentTimeline>
+        </SegmentTemplate>
+      </Representation>
+      <Representation id="2" bandwidth="4347640" codecs="avc1.640028" mimeType="video/mp4" sar="135:98" width="1920" height="1080">
+        <SegmentTemplate timescale="1000" initialization="rush_hour_init_1080p.m4s" media="rush_hour_chunk_1080p_$Number%05d$.m4s" startNumber="1">
+          <SegmentTimeline>
+            <S t="0" d="5000"/>
+            <S t="5000" d="3958"/>
+            <S t="8958" d="4083"/>
+            <S t="13042" d="3750"/>
+            <S t="16792" d="4334"/>
+            <S t="21125" d="2916"/>
+            <S t="24042" d="4459"/>
+            <S t="28500" d="1500"/>
+          </SegmentTimeline>
+        </SegmentTemplate>
+      </Representation>
+    </AdaptationSet>
+    <AdaptationSet id="1" contentType="audio" startWithSAP="1" segmentAlignment="true">
+      <ContentProtection value="cenc" schemeIdUri="urn:mpeg:dash:mp4protection:2011" cenc:default_KID="12345678-90ab-cdef-1234-567890abcdef"/>
+      <ContentProtection schemeIdUri="urn:uuid:1077efec-c0b2-4d02-ace3-3c1e52e2fb4b">
+        <cenc:pssh>AAAANHBzc2gBAAAAEHfv7MCyTQKs4zweUuL7SwAAAAESNFZ4kKvN7xI0VniQq83vAAAAAA==</cenc:pssh>
+      </ContentProtection>
+      <Representation id="3" bandwidth="135590" codecs="mp4a.40.2" mimeType="audio/mp4" audioSamplingRate="44100">
+        <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"/>
+        <SegmentTemplate timescale="44100" initialization="rush_hour_init_audio.m4s" media="rush_hour_chunk_audio_$Number%05d$.m4s" startNumber="1">
+          <SegmentTimeline>
+            <S t="0" d="177152"/>
+            <S t="177152" d="176128" r="1"/>
+            <S t="529408" d="177152"/>
+            <S t="706560" d="176128" r="2"/>
+            <S t="1234944" d="88064"/>
+          </SegmentTimeline>
+        </SegmentTemplate>
+      </Representation>
+    </AdaptationSet>
+  </Period>
+</MPD>
