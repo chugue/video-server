@@ -3,9 +3,10 @@ package com.project.videodemo;
 import io.github.cdimascio.dotenv.Dotenv;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
 
 import java.util.Objects;
-
+@EnableAspectJAutoProxy
 @SpringBootApplication
 public class VideoDemoApplication {
 

@@ -14,5 +14,15 @@ public class AESUtilTest {
     @Autowired
     private AESUtil aesUtil;
 
-
+//    @Test
+//    public void generateKey_test() throws Exception {
+//        // given
+//        KeyRequest.SubscribeDTO reqDTO = new KeyRequest.SubscribeDTO(1, "1234");
+//        // when
+//        String userKey = aesUtil.generateKey(reqDTO.getUserId(), reqDTO.getPassword());
+//        // eye
+//        System.out.println("👉👉👉👉👉👉👉👉👉" + userKey);
+//        // then
+//
+//    }
 }
