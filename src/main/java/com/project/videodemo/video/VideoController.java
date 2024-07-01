@@ -61,14 +61,14 @@ public class VideoController {
             videoService.encryptAndPackage(baseFileName, directoryPath);
 
 
-//            // 인코딩된 파일들을 S3에 업로드
+            // 인코딩된 파일들을 S3에 업로드
 //            videoService.uploadToS3(directoryPath, baseFileName);
 
             // mpd파일에서 m4s호출 경로 수정 CORS 걸림
             Path mpdFilePath = directoryPath.resolve(baseFileName + ".mpd");
             RespDTO respDTO = new RespDTO(mpdFilePath);
 
-//            // 로컬 파일 및 디렉토리 삭제
+            // 로컬 파일 및 디렉토리 삭제
 //            videoService.deleteLocalFiles(directoryPath);
 
             return ResponseEntity.ok(new ApiUtil<>(respDTO));

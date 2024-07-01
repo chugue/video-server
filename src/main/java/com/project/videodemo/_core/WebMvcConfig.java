@@ -33,14 +33,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/upload")
-                .allowedOrigins("http://localhost:7000", "http://localhost:8080")
-                .allowedMethods("POST")
-                .allowedHeaders("*")
-                .allowCredentials(true);
 
-        registry.addMapping("/videos")
-                .allowedOrigins("http://localhost:7000", "http://localhost:8080")
+        registry.addMapping("/**")
+                .allowedOrigins("http://localhost:8080")
                 .allowedMethods("*")
                 .allowedHeaders("*")
                 .allowCredentials(true);

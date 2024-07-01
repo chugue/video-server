@@ -20,6 +20,11 @@ spring:
   h2:
     console:
       enabled: true
+  sql:
+    init:
+      mode: always
+      data-locations:
+        - classpath:db/data.sql
 
   jpa:
     hibernate:

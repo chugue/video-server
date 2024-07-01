@@ -40,67 +40,6 @@ public class VideoService {
     private String shakaPackagerPath;
 
 
-    // 암호화 메소드
-    @Transactional
-    public void encryptAndPackage(String baseFileName, Path directoryPath) throws IOException, InterruptedException {
-        String[] resolutions = {"480p", "720p", "1080p"};
-
-        List<String> command = new ArrayList<>();
-        command.add(shakaPackagerPath);
-
-        for (String resolution : resolutions) {
-            String mp4InputFile = directoryPath.resolve(baseFileName + "_" + resolution + ".mp4").toString();
-            String videoInitSegmentPath = directoryPath.resolve(baseFileName + "_init_" + resolution + ".m4s").toString();
-            String videoSegmentPath = directoryPath.resolve(baseFileName + "_chunk_" + resolution + "_$Number%05d$.m4s").toString();
-
-            command.add("in=" + mp4InputFile + ",stream=video,init_segment=" + videoInitSegmentPath + ",segment_template=" + videoSegmentPath);
-        }
-
-        String audioInitSegmentPath = directoryPath.resolve(baseFileName + "_init_audio.m4s").toString();
-        String audioSegmentPath = directoryPath.resolve(baseFileName + "_chunk_audio_$Number%05d$.m4s").toString();
-        String audioInputFile = directoryPath.resolve(baseFileName + "_audio.mp4").toString();
-
-        command.add("in=" + audioInputFile + ",stream=audio,init_segment=" + audioInitSegmentPath + ",segment_template=" + audioSegmentPath);
-
-        String encryptedOutputMpd = directoryPath.resolve(baseFileName + "_encrypted.mpd").toString();
-
-        command.add("--enable_raw_key_encryption");
-        command.add("--keys");
-        command.add("label=:key_id=" + keyId + ":key=" + contentKey);
-        command.add("--mpd_output");
-        command.add(encryptedOutputMpd);
-        command.add("--segment_duration");
-        command.add("4");
-
-        ProcessBuilder pb = new ProcessBuilder(command);
-        pb.directory(directoryPath.toFile());
-        pb.redirectErrorStream(true);
-        Process process = pb.start();
-
-        new Thread(() -> {
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    System.out.println(line);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }).start();
-
-        int exitCode = process.waitFor();
-        if (exitCode != 0) {
-            throw new RuntimeException("shaka-packager command failed with exit code " + exitCode);
-        }
-
-        // 필요 없는 파일 삭제
-        for (String resolution : resolutions) {
-            Files.deleteIfExists(directoryPath.resolve(baseFileName + "_" + resolution + ".mp4"));
-            Files.deleteIfExists(directoryPath.resolve(baseFileName + ".mp4"));
-        }
-        Files.deleteIfExists(directoryPath.resolve(baseFileName + "_audio.mp4"));
-    }
-
 
     @Transactional
     public void encodeMultipleResolutions(String inputFilePath, String baseFileName, Path directoryPath) throws IOException, InterruptedException {
@@ -122,6 +61,8 @@ public class VideoService {
                     "-b:v", bitrate, "-s:v", size,
                     "-c:v", "libx264",
                     "-c:a", "aac",
+                    "-video_track_timescale", "1000",
+                    "-reset_timestamps", "1",
                     "-y", outputFilePath
             );
 
@@ -153,6 +94,8 @@ public class VideoService {
                 "-i", inputFilePath,
                 "-vn",
                 "-c:a", "aac",
+                "-ar", "44100",
+                "-reset_timestamps", "1",
                 "-y", audioOutputFilePath
         );
 
@@ -177,6 +120,69 @@ public class VideoService {
         }
     }
 
+
+    // 암호화 메소드
+    @Transactional
+    public void encryptAndPackage(String baseFileName, Path directoryPath) throws IOException, InterruptedException {
+        String[] resolutions = {"480p", "720p", "1080p"};
+
+        List<String> command = new ArrayList<>();
+        command.add(shakaPackagerPath);
+
+        for (String resolution : resolutions) {
+            String mp4InputFile = directoryPath.resolve(baseFileName + "_" + resolution + ".mp4").toString();
+            String videoInitSegmentPath = directoryPath.resolve(baseFileName + "_init_" + resolution + ".m4s").toString();
+            String videoSegmentPath = directoryPath.resolve(baseFileName + "_chunk_" + resolution + "_$Number%05d$.m4s").toString();
+
+            command.add("in=" + mp4InputFile + ",stream=video,init_segment=" + videoInitSegmentPath + ",segment_template=" + videoSegmentPath);
+        }
+
+        String audioInitSegmentPath = directoryPath.resolve(baseFileName + "_init_audio.m4s").toString();
+        String audioSegmentPath = directoryPath.resolve(baseFileName + "_chunk_audio_$Number%05d$.m4s").toString();
+        String audioInputFile = directoryPath.resolve(baseFileName + "_audio.mp4").toString();
+
+        command.add("in=" + audioInputFile + ",stream=audio,init_segment=" + audioInitSegmentPath + ",segment_template=" + audioSegmentPath );
+
+        String encryptedOutputMpd = directoryPath.resolve(baseFileName + ".mpd").toString();
+
+        command.add("--enable_raw_key_encryption");
+        command.add("--keys");
+        command.add("label=:key_id=" + keyId + ":key=" + contentKey);
+        command.add("--mpd_output");
+        command.add(encryptedOutputMpd);
+        command.add("--segment_duration");
+        command.add("4");
+
+
+        ProcessBuilder pb = new ProcessBuilder(command);
+
+        pb.directory(directoryPath.toFile());
+        pb.redirectErrorStream(true);
+        Process process = pb.start();
+
+        new Thread(() -> {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    System.out.println(line);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
+
+        int exitCode = process.waitFor();
+        if (exitCode != 0) {
+            throw new RuntimeException("shaka-packager command failed with exit code " + exitCode);
+        }
+
+        // 필요 없는 파일 삭제
+        for (String resolution : resolutions) {
+            Files.deleteIfExists(directoryPath.resolve(baseFileName + "_" + resolution + ".mp4"));
+            Files.deleteIfExists(directoryPath.resolve(baseFileName + ".mp4"));
+        }
+        Files.deleteIfExists(directoryPath.resolve(baseFileName + "_audio.mp4"));
+    }
 
     ///////////////////////////////////////////////////////////////////////////////
 

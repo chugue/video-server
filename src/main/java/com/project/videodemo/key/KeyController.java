@@ -14,17 +14,16 @@ public class KeyController {
     private final KeyService keyService;
 
     // userkey 발급
-    @PostMapping("/subscribe") // TODO : CORS설정같은 걸로 이 메소드 막아야됨 (프론트서버에서만 요청 가능하도록)
+    @PostMapping("/api/subscribe") // TODO : CORS설정같은 걸로 이 메소드 막아야됨 (프론트서버에서만 요청 가능하도록)
     public ResponseEntity<?> subscribeUser(@RequestBody KeyRequest.SubscribeDTO reqDTO) throws Exception {
         KeyResponse.UserKey respDTO = keyService.subscribeUser(reqDTO);
         return ResponseEntity.ok(new ApiUtil<>(respDTO));
     }
 
-    // 라이센스 반환
-    @PostMapping("/get-license")
+    // 라이센스 발급
+    @PostMapping("/api/get-license")
     public ResponseEntity<?> getVideo(@RequestBody KeyRequest.GetVideoDTO reqDTO) throws Exception {
-        String license = keyService.getLisence(reqDTO);
-        KeyResponse.LicenseKey respDTO = new KeyResponse.LicenseKey(license);
+        KeyResponse.LicenseKey respDTO = keyService.getLisence(reqDTO);
         return ResponseEntity.ok(new ApiUtil<>(respDTO));
     }
 }

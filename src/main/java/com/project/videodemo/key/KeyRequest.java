@@ -13,5 +13,6 @@ public class KeyRequest {
     public static class GetVideoDTO {
         private Integer userId;
         private String userKey;
+        private Integer contentId;
     }
 }

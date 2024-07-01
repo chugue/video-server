@@ -14,6 +14,8 @@ public class KeyService {
     private final KeyRepository keyRepository;
     @Value("${CONTENT_KEY}")
     private String contentKey;
+    @Value("${KEY_ID}")
+    private String keyId;
 
 
     @Transactional
@@ -29,12 +31,11 @@ public class KeyService {
     }
 
 
-    public String getLisence(KeyRequest.GetVideoDTO reqDTO) {
-        Key storedKey = keyRepository.findById(reqDTO.getUserId())
-                .orElse(null);
+    public KeyResponse.LicenseKey getLisence(KeyRequest.GetVideoDTO reqDTO) {
+        Key storedKey = keyRepository.findByUserId(reqDTO.getUserId()).orElse(null);
 
-        if (storedKey != null && storedKey.equals(reqDTO.getUserKey())) {
-            return contentKey;
+        if (storedKey.getUserKey() != null && storedKey.getUserKey().equals(reqDTO.getUserKey())) {
+            return new KeyResponse.LicenseKey(keyId, contentKey);
         } else {
             throw new RuntimeException("Invalid user key");
         }

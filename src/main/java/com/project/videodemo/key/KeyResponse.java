@@ -18,10 +18,12 @@ public class KeyResponse {
 
     @Data
     public static class LicenseKey {
-        private String license;
+        private String keyId;
+        private String contentKey;
 
-        public LicenseKey(String license) {
-            this.license = license;
+        public LicenseKey(String keyId, String contentKey) {
+            this.keyId = keyId;
+            this.contentKey = contentKey;
         }
     }
 }
