@@ -1,6 +1,7 @@
 package com.project.videodemo.key;
 
 
+import com.project.videodemo.error.exception.Exception404;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,7 +13,7 @@ import java.util.UUID;
 @Service
 public class KeyService {
     private final KeyRepository keyRepository;
-    @Value("${CONTENT_KEY}")
+    @Value("${content.key}")
     private String contentKey;
 
 
@@ -32,8 +33,7 @@ public class KeyService {
     public String getLisence(KeyRequest.GetVideoDTO reqDTO) {
         Key storedKey = keyRepository.findById(reqDTO.getUserId())
                 .orElse(null);
-
-        if (storedKey != null && storedKey.equals(reqDTO.getUserKey())) {
+        if (storedKey != null && storedKey.getUserKey().equals(reqDTO.getUserKey())){
             return contentKey;
         } else {
             throw new RuntimeException("Invalid user key");

@@ -42,3 +42,6 @@ aws:
     secretKey: ${AWS_SECRET_KEY}
   region: ${REGION}
   bucket: ${BUCKET_NAME}
+
+content:
+  key: ${CONTENT_KEY}
