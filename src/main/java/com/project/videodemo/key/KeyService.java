@@ -13,9 +13,9 @@ import java.util.UUID;
 @Service
 public class KeyService {
     private final KeyRepository keyRepository;
-    @Value("${content.key}")
+    @Value("${content.contentKey}")
     private String contentKey;
-    @Value("${KEY_ID}")
+    @Value("${content.keyId}")
     private String keyId;
 
 
@@ -32,11 +32,11 @@ public class KeyService {
     }
 
 
-    public String getLisence(KeyRequest.GetVideoDTO reqDTO) {
-        Key storedKey = keyRepository.findById(reqDTO.getUserId())
-                .orElse(null);
+    public KeyResponse.LicenseKey getLisence(KeyRequest.GetVideoDTO reqDTO) {
+        Key storedKey = keyRepository.findById(reqDTO.getUserId()).orElse(null);
+
         if (storedKey != null && storedKey.getUserKey().equals(reqDTO.getUserKey())){
-            return contentKey;
+            return new KeyResponse.LicenseKey(keyId, contentKey);
         } else {
             throw new RuntimeException("Invalid user key");
         }

@@ -23,8 +23,7 @@ public class KeyController {
     // 라이센스 반환
     @PostMapping("/get-license")
     public ResponseEntity<?> getVideo(@RequestBody @Valid KeyRequest.GetVideoDTO reqDTO, Error error) throws Exception {
-        String license = keyService.getLisence(reqDTO);
-        KeyResponse.LicenseKey respDTO = new KeyResponse.LicenseKey(license);
+        KeyResponse.LicenseKey respDTO  = keyService.getLisence(reqDTO);
         return ResponseEntity.ok(new ApiUtil<>(respDTO));
     }
 }

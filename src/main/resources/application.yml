@@ -49,4 +49,5 @@ aws:
   bucket: ${BUCKET_NAME}
 
 content:
-  key: ${CONTENT_KEY}
+  contentKey: ${CONTENT_KEY}
+  keyId: ${KEY_ID}
