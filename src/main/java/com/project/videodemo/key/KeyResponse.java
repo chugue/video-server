@@ -2,8 +2,6 @@ package com.project.videodemo.key;
 
 import lombok.Data;
 
-import javax.crypto.SecretKey;
-import java.util.Arrays;
 
 public class KeyResponse {
 
